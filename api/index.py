@@ -6,16 +6,16 @@ from typing import List, Dict
 from PIL import Image, features
 import logging
 
-# Configure logging
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Image Converter API")
 
-# Add CORS middleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Specify your frontend domain in production
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,66 +23,30 @@ app.add_middleware(
 
 def get_supported_formats() -> Dict[str, List[str]]:
     """
-    Dynamically get all supported formats from PIL.
-    Returns a dictionary where each format maps to a list of possible conversion formats.
+    Returns a static map of the most commonly used and reliable image format conversions.
+    These are the core formats that Pillow is known to handle well.
     """
-    # Get all supported formats from PIL
-    supported_formats = set()
-    
-    # Check read support
-    readable_formats = {
-        fmt.lower() for fmt, val in Image.registered_extensions().items()
-        if val in Image.OPEN
-    }
-    
-    # Check write support
-    writable_formats = {
-        fmt.lower() for fmt, val in Image.registered_extensions().items()
-        if val in Image.SAVE
-    }
-    
-    # Only include formats that can be both read and written
-    supported_formats = readable_formats.intersection(writable_formats)
-    
-    # Remove the dot from extensions
-    supported_formats = {fmt.replace('.', '') for fmt in supported_formats}
-    
-    # Remove formats that are not typically used for images
-    formats_to_exclude = {'pdf', 'eps', 'wmf', 'webp' if not features.check('webp') else None}
-    supported_formats = {fmt for fmt in supported_formats if fmt not in formats_to_exclude}
-    
-    # Create conversion map
-    conversion_map = {}
-    for fmt in supported_formats:
-        # Each format can be converted to all other supported formats
-        conversion_map[fmt] = [
-            other_fmt for other_fmt in supported_formats 
-            if other_fmt != fmt
-        ]
+    return {
+        # JPEG - Universal support, no transparency
+        'jpeg': ['png', 'webp', 'tiff', 'bmp', 'gif'],
+        'jpg': ['png', 'webp', 'tiff', 'bmp', 'gif'],
         
-        # Special handling for JPEG
-        if fmt == 'jpeg':
-            conversion_map['jpg'] = conversion_map[fmt]
-        elif fmt == 'jpg':
-            conversion_map['jpeg'] = conversion_map[fmt]
-            
-    # Add common format aliases
-    format_aliases = {
-        'jpg': 'jpeg',
-        'jpeg': 'jpg',
-        'tif': 'tiff',
-        'tiff': 'tif',
+        # PNG - Excellent for lossless compression, supports transparency
+        'png': ['jpeg', 'jpg', 'webp', 'tiff', 'bmp', 'gif'],
+        
+        # WebP - Modern format with good compression
+        'webp': ['jpeg', 'jpg', 'png', 'tiff', 'bmp', 'gif'],
+        
+        # TIFF - Good for high-quality images
+        'tiff': ['jpeg', 'jpg', 'png', 'webp', 'bmp', 'gif'],
+        'tif': ['jpeg', 'jpg', 'png', 'webp', 'bmp', 'gif'],
+        
+        # BMP - Simple, uncompressed format
+        'bmp': ['jpeg', 'jpg', 'png', 'webp', 'tiff', 'gif'],
+        
+        # GIF - Animation support, limited colors
+        'gif': ['jpeg', 'jpg', 'png', 'webp', 'tiff', 'bmp']
     }
-    
-    # Add aliases to conversion map
-    for alias, main_format in format_aliases.items():
-        if main_format in conversion_map and alias not in conversion_map:
-            conversion_map[alias] = conversion_map[main_format]
-    
-    # Log supported formats
-    logger.info(f"Supported formats: {conversion_map}")
-    
-    return conversion_map
 
 # Initialize the SUPPORTED_FORMATS when the application starts
 SUPPORTED_FORMATS = get_supported_formats()
