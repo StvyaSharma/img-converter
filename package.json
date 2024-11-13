@@ -1,5 +1,5 @@
 {
-  "name": "nextjs-fastapi",
+  "name": "img-converter",
   "version": "0.2.0",
   "private": true,
   "scripts": {
@@ -15,6 +15,7 @@
     "@types/react": "18.3.8",
     "@types/react-dom": "18.3.0",
     "autoprefixer": "10.4.20",
+    "axios": "^1.7.7",
     "concurrently": "^9.0.1",
     "eslint": "8.41.0",
     "eslint-config-next": "13.4.4",
