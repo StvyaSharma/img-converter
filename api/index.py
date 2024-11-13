@@ -10,8 +10,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Image Converter API")
-
+app = FastAPI(title="Image Converter API" ,docs_url="/api/py/docs", openapi_url="/api/py/openapi.json")
 
 app.add_middleware(
     CORSMiddleware,
